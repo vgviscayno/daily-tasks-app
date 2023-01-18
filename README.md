@@ -4,6 +4,13 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 First, run the development server:
 
+(make sure you're using node v16.16.0)
+
+```bash
+#if you're using nvm as your node version manager
+nvm use
+```
+
 ```bash
 npm run dev
 # or
