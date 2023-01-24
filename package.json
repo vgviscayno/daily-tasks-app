@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": " yarn db:push && yarn next:dev",
+    "next:dev": "next dev",
+    "db:push": "yarn prisma db push",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
