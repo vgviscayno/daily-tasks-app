@@ -4,10 +4,9 @@ import Link from "next/link";
 
 type MainLayoutProps = {
   children?: React.ReactNode;
-  className?: string;
 };
 
-export default function MainLayout({ children, className }: MainLayoutProps) {
+export default function MainLayout({ children }: MainLayoutProps) {
   const { tasks } = useTasks();
   return (
     <main className="flex">
@@ -38,13 +37,16 @@ export default function MainLayout({ children, className }: MainLayoutProps) {
             <li key={task.id}>
               <Link
                 className="my-2 p-4 border-2 flex items-center"
-                style={{ backgroundColor: task.theme, borderColor: task.theme }}
+                style={{
+                  backgroundColor: task.theme,
+                  borderColor: task.theme,
+                }}
                 href={`/tasks/${task.id}`}
               >
                 <h2>{task.title}</h2>
 
                 <div className="flex ml-auto">
-                  <p>{task.time}</p>
+                  <p>{task.minutes}</p>
                   <ClockIcon className="h-6 w-6" />
                   <ChevronRightIcon className="h-6 w-6 ml-4" />
                 </div>

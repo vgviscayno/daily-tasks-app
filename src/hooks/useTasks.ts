@@ -1,5 +1,5 @@
 import { Task } from "@prisma/client";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import useSWR from "swr";
 import { useTimersStore } from "./useTimersStore";
 
@@ -18,10 +18,6 @@ export default function useTasks() {
     mutate: (data?: Response | Promise<Response>) => void;
   };
 
-  const tasks = useMemo(() => {
-    return data ? data.data.tasks : [];
-  }, [data]);
-
   const { addTimer, clearTimers } = useTimersStore(
     ({ addTimer, clearTimers }) => ({ addTimer, clearTimers })
   );
@@ -29,13 +25,14 @@ export default function useTasks() {
   useEffect(() => {
     clearTimers();
     console.log("setting timers");
-    tasks.forEach((task) => {
-      addTimer(task);
-    });
-  }, [addTimer, clearTimers, tasks]);
+    if (data) {
+      data.data.tasks.forEach((task) => {
+        addTimer(task);
+      });
+    }
+  }, [addTimer, clearTimers, data]);
 
   return {
-    tasks,
-    mutate,
+    tasks: data ? data.data.tasks : [],
   };
 }

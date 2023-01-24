@@ -2,6 +2,7 @@ import { Task } from "@prisma/client";
 import { create } from "zustand";
 
 type Timer = {
+  minutesElapsed: number;
   minutesRemaining: number;
   seconds: number;
   isRunning: boolean;
@@ -17,76 +18,160 @@ interface TimersState {
   stopTimer: (taskId: number) => void;
 }
 
-export const useTimersStore = create<TimersState>((set) => ({
-  timers: [],
-  addTimer: (task: Task) =>
-    set((state) => ({
-      ...state,
-      timers: [
-        ...state.timers,
-        {
-          ...task,
-          minutesRemaining: task.minutes,
-          seconds: 0,
-          isRunning: false,
-          intervalId: null,
-        },
-      ],
-    })),
-  clearTimers: () => set({ timers: [] }),
-  startTimer: (taskId: number) =>
+export const useTimersStore = create<TimersState>((set) => {
+  const addTimer = (task: Task) => {
     set((state) => {
-      const timers = state.timers.map((timer) => {
-        if (timer.id === taskId) {
-          timer.isRunning = true;
-          timer.intervalId = window.setInterval(() => {
-            console.log("tick tock");
-            timer.seconds--;
-            if (timer.seconds < 0) {
-              timer.minutesRemaining--;
-              timer.seconds = 59;
-            }
-            if (timer.minutesRemaining < 0) {
-              timer.minutesRemaining = 0;
-              timer.seconds = 0;
-              timer.isRunning = false;
-              if (timer.intervalId) {
-                window.clearInterval(timer.intervalId);
-              }
-            }
-          }, 1000);
-        }
-        return timer;
-      });
+      return {
+        ...state,
+        timers: [
+          ...state.timers,
+          {
+            ...task,
+            minutesRemaining: task.minutes,
+            seconds: 0,
+            minutesElapsed: 0,
+            isRunning: false,
+            intervalId: null,
+          },
+        ],
+      };
+    });
+  };
 
-      return { ...state, timers: [...timers] };
-    }),
-  pauseTimer: (taskId) =>
-    set((state) => {
-      const timers = state.timers.map((timer) => {
-        if (timer.id === taskId) {
-          timer.isRunning = false;
-          if (timer.intervalId) {
-            window.clearInterval(timer.intervalId);
-          }
+  const decrementTimer = (timer: Timer): Timer => {
+    if (timer.seconds === 0) {
+      if (timer.minutesRemaining === 0) {
+        if (timer.intervalId) {
+          window.clearInterval(timer.intervalId);
         }
-        return timer;
-      });
-      return { ...state, timers: [...timers] };
-    }),
-  stopTimer: (timerId) =>
-    set((state) => {
-      const timers = state.timers.map((timer) => {
-        if (timer.id === timerId) {
-          timer.isRunning = false;
-          if (timer.intervalId) {
-            window.clearInterval(timer.intervalId);
-          }
-          timer.minutesRemaining = timer.minutes;
-          timer.seconds = 0;
+        return {
+          ...timer,
+          isRunning: false,
+          seconds: 0,
+          minutesRemaining: 0,
+          minutesElapsed: timer.minutes,
+        };
+      } else {
+        return {
+          ...timer,
+          minutesRemaining: timer.minutesRemaining - 1,
+          minutesElapsed:
+            timer.minutesRemaining <= timer.minutes - 1
+              ? timer.minutesElapsed + 1
+              : timer.minutesElapsed,
+          seconds: 59,
+        };
+      }
+    } else {
+      return {
+        ...timer,
+        minutesRemaining: timer.minutesRemaining,
+        seconds: timer.seconds - 1,
+      };
+    }
+  };
+
+  const clearTimers = () => set({ timers: [] });
+
+  const startTimer = (taskId: number) => {
+    console.log("starting timer...");
+    const intervalId = window.setInterval(() => {
+      set((state) => {
+        let timer = state.timers.find((timer) => timer.id === taskId);
+
+        if (!timer) {
+          return { ...state };
         }
-        return timer;
+
+        timer = decrementTimer(timer);
+        return {
+          ...state,
+          timers: [
+            ...state.timers.filter((timer) => timer.id !== taskId),
+            timer,
+          ],
+        };
       });
-      return { ...state, timers: [...timers] };
-    }),
-}));
+    }, 1000);
+    set((state) => {
+      let timer = state.timers.find((timer) => timer.id === taskId);
+      if (!timer) {
+        return { ...state };
+      }
+
+      return {
+        ...state,
+        timers: [
+          ...state.timers.filter((timer) => timer.id !== taskId),
+          {
+            ...timer,
+            intervalId,
+            isRunning: true,
+          },
+        ],
+      };
+    });
+  };
+
+  const pauseTimer = (taskId: number) => {
+    console.log("pausing timer...");
+    set((state) => {
+      let timer = state.timers.find((timer) => timer.id === taskId);
+      if (!timer) {
+        return { ...state };
+      }
+
+      if (timer.intervalId) {
+        window.clearInterval(timer.intervalId);
+      }
+
+      return {
+        ...state,
+        timers: [
+          ...state.timers.filter((timer) => timer.id !== taskId),
+          {
+            ...timer,
+            isRunning: false,
+          },
+        ],
+      };
+    });
+  };
+
+  const stopTimer = (taskId: number) => {
+    console.log("pausing timer...");
+    set((state) => {
+      let timer = state.timers.find((timer) => timer.id === taskId);
+      if (!timer) {
+        return { ...state };
+      }
+
+      if (timer.intervalId) {
+        window.clearInterval(timer.intervalId);
+      }
+
+      return {
+        ...state,
+        timers: [
+          ...state.timers.filter((timer) => timer.id !== taskId),
+          {
+            ...timer,
+            isRunning: false,
+            minutesRemaining: timer.minutes,
+            minutesElapsed: 0,
+            seconds: 0,
+          },
+        ],
+      };
+    });
+  };
+
+  return {
+    timers: [],
+    addTimer,
+    clearTimers,
+    startTimer,
+    pauseTimer,
+    stopTimer,
+  };
+});

@@ -1,6 +1,8 @@
 import MainLayout from "@/components/MainLayout";
 import { useTimersStore } from "@/hooks/useTimersStore";
 import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ClockIcon,
   PauseCircleIcon,
   PlayCircleIcon,
@@ -9,6 +11,7 @@ import {
 import { Task } from "@prisma/client";
 
 import { useRouter } from "next/router";
+import { useEffect } from "react";
 import { shallow } from "zustand/shallow";
 
 type Response = {
@@ -18,7 +21,7 @@ type Response = {
 };
 
 const formatDigits = (num: number | undefined) =>
-  typeof num === "number" ? (num > 10 ? `${num}` : `0${num}`) : ``;
+  typeof num === "number" ? (num >= 10 ? `${num}` : `0${num}`) : ``;
 
 export default function SingleTaskRoute() {
   const router = useRouter();
@@ -33,6 +36,7 @@ export default function SingleTaskRoute() {
     }),
     shallow
   );
+
   if (!taskId) {
     return (
       <MainLayout>
@@ -43,14 +47,15 @@ export default function SingleTaskRoute() {
 
   const timer = timers.find((t) => t.id === parseInt(taskId as string));
 
-  console.log({ timer });
-
   return (
     <MainLayout>
       <div className="flex">
         <button className="ml-auto text-sky-400">Edit</button>
       </div>
-      <div className="h-screen flex justify-center">
+      <div className="h-full flex justify-center items-center">
+        <button className="border-2 h-fit">
+          <ChevronLeftIcon className="h-6 w-6 ml-4" />
+        </button>
         <div
           className="flex-col justify-evenly w-1/3 h-3/4 border-2 rounded-xl p-4"
           style={{ backgroundColor: timer?.theme, borderColor: timer?.theme }}
@@ -60,7 +65,7 @@ export default function SingleTaskRoute() {
               <p>Minutes elapsed</p>
               <div className="flex">
                 <ClockIcon className="w-6 h-6" />
-                <p>{timer ? timer.minutes - timer.minutesRemaining : ""}</p>
+                <p>{timer ? timer.minutesElapsed : ""}</p>
               </div>
             </div>
             <div className="flex-col ml-auto">
@@ -78,12 +83,14 @@ export default function SingleTaskRoute() {
 
           <div className="flex justify-center h-1/6">
             <div className="flex-col items-center w-fit">
-              <p className="text-3xl">{timer?.minutesRemaining}</p>
+              <p className="text-3xl">
+                {formatDigits(timer?.minutesRemaining)}
+              </p>
               <p className="text-xs">Minute(s)</p>
             </div>
             <p className="text-3xl h-fit">:</p>
             <div className="flex-col items-stretch w-fit">
-              <p className="text-3xl">{timer?.seconds}</p>
+              <p className="text-3xl">{formatDigits(timer?.seconds)}</p>
               <p className="text-xs">Second(s)</p>
             </div>
           </div>
@@ -112,6 +119,9 @@ export default function SingleTaskRoute() {
             </button>
           </div>
         </div>
+        <button className="border-2 h-fit">
+          <ChevronRightIcon className="h-6 w-6 ml-4" />
+        </button>
       </div>
     </MainLayout>
   );
