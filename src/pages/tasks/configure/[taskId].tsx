@@ -2,11 +2,18 @@ import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Head from "next/head";
-import { ClockIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
+import {
+  ClockIcon,
+  Squares2X2Icon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import uniqolor from "uniqolor";
 import { useEffect } from "react";
+import { useRouter } from "next/router";
+import useSWR from "swr";
+import { Task } from "@prisma/client";
 
-const newTaskFormSchema = z.object({
+const configureTaskFormSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
   minutes: z
     .number({ required_error: "Time is required" })
@@ -14,40 +21,82 @@ const newTaskFormSchema = z.object({
   theme: z.string().min(1, { message: "Theme is required" }),
 });
 
-type NewTaskFormSchema = z.infer<typeof newTaskFormSchema>;
+type ConfigureTaskFormSchema = z.infer<typeof configureTaskFormSchema>;
 
-const defaultValues: NewTaskFormSchema = {
+const defaultValues: ConfigureTaskFormSchema = {
   title: "",
   minutes: 1,
   theme: uniqolor.random({ format: "hex", lightness: [70, 80] }).color,
 };
 
-export default function NewTaskRoute() {
+export default function ConfigureTaskRoute() {
+  const router = useRouter();
+  const { taskId = "" } = router.query;
+
+  const id = taskId === "new" ? undefined : taskId;
+
+  const { data: task, mutate } = useSWR<Task>(id, async (id) => {
+    const response = await fetch(`/api/tasks/${id}`);
+    const body = (await response.json()) as { data: { task: Task } };
+    return body.data.task;
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitSuccessful, isSubmitting },
     reset,
-  } = useForm<NewTaskFormSchema>({
-    resolver: zodResolver(newTaskFormSchema),
+  } = useForm<ConfigureTaskFormSchema>({
+    resolver: zodResolver(configureTaskFormSchema),
     defaultValues,
   });
 
   useEffect(() => {
-    if (isSubmitSuccessful) {
-      reset();
+    if (task) {
+      reset({
+        minutes: task.minutes,
+        theme: task.theme,
+        title: task.title,
+      });
     }
-  }, [isSubmitSuccessful, reset]);
+  }, [task, reset]);
 
-  const onSubmit = (values: NewTaskFormSchema) => {
-    console.log({ values });
-    fetch("/api/tasks", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ data: { task: values } }),
-    });
+  useEffect(() => {
+    if (isSubmitSuccessful) {
+      if (task) {
+        reset({
+          minutes: task.minutes,
+          theme: task.theme,
+          title: task.title,
+        });
+      } else {
+        reset();
+      }
+    }
+  }, [isSubmitSuccessful, reset, task]);
+
+  const onSubmit = (values: ConfigureTaskFormSchema) => {
+    if (!id) {
+      fetch("/api/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ data: { task: values } }),
+      });
+    } else {
+      fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ data: { task: values } }),
+      })
+        .then((response) => response.json())
+        .then((body: { data: { task: Task } }) => {
+          mutate(body.data.task);
+        });
+    }
   };
 
   return (
@@ -55,7 +104,30 @@ export default function NewTaskRoute() {
       <Head>
         <title>Configure Task</title>
       </Head>
-      <div className="grid h-screen place-items-center">
+      {id && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => {
+              if (confirm("Are you sure you want to delete this task?")) {
+                fetch(`/api/tasks/${id}`, {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                }).then((response) => {
+                  if (response.status === 204) {
+                    alert("Task has been deleted. This window will now close.");
+                    window.close();
+                  }
+                });
+              }
+            }}
+          >
+            <TrashIcon className="h-6 w-6 stroke-red-600" />
+          </button>
+        </div>
+      )}
+      <div className="grid h-full place-items-center">
         <form
           method="post"
           onSubmit={handleSubmit(onSubmit)}

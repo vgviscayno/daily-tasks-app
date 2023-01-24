@@ -10,12 +10,11 @@ type Response = {
 };
 
 export default function useTasks() {
-  const { data, mutate } = useSWR<Response>("/api/tasks", async (url) => {
+  const { data } = useSWR<Response>("/api/tasks", async (url) => {
     const response = await fetch(url);
     return await response.json();
   }) as {
     data: Response | undefined;
-    mutate: (data?: Response | Promise<Response>) => void;
   };
 
   const { addTimer, clearTimers } = useTimersStore(
@@ -24,7 +23,6 @@ export default function useTasks() {
 
   useEffect(() => {
     clearTimers();
-    console.log("setting timers");
     if (data) {
       data.data.tasks.forEach((task) => {
         addTimer(task);

@@ -74,7 +74,6 @@ export const useTimersStore = create<TimersState>((set) => {
   const clearTimers = () => set({ timers: [] });
 
   const startTimer = (taskId: number) => {
-    console.log("starting timer...");
     const intervalId = window.setInterval(() => {
       set((state) => {
         let timer = state.timers.find((timer) => timer.id === taskId);
@@ -114,7 +113,6 @@ export const useTimersStore = create<TimersState>((set) => {
   };
 
   const pauseTimer = (taskId: number) => {
-    console.log("pausing timer...");
     set((state) => {
       let timer = state.timers.find((timer) => timer.id === taskId);
       if (!timer) {
@@ -139,7 +137,6 @@ export const useTimersStore = create<TimersState>((set) => {
   };
 
   const stopTimer = (taskId: number) => {
-    console.log("pausing timer...");
     set((state) => {
       let timer = state.timers.find((timer) => timer.id === taskId);
       if (!timer) {
