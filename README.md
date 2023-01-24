@@ -11,7 +11,7 @@ First, run the development server:
 nvm use
 ```
 
-use `.env.example as reference`, and create a `.env` file
+use `.env.example` as reference, and create a `.env` file
 
 ```bash
 npm run dev
