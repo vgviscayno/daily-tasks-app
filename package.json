@@ -26,7 +26,8 @@
     "swr": "^2.0.1",
     "typescript": "4.9.4",
     "uniqolor": "^1.1.0",
-    "zod": "^3.20.2"
+    "zod": "^3.20.2",
+    "zustand": "^4.3.2"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.13",

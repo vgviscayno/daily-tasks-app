@@ -1,23 +1,24 @@
-import styles from "@/components/MainLayout/styles.module.css";
+import useTasks from "@/hooks/useTasks";
+import { ChevronRightIcon, ClockIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { useRouter } from "next/router";
 
 type MainLayoutProps = {
   children?: React.ReactNode;
+  className?: string;
 };
 
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function MainLayout({ children, className }: MainLayoutProps) {
+  const { tasks } = useTasks();
   return (
     <main className="flex">
-      <nav className="border-r-2 w-4/12 p-4">
-        <div className="flex justify-center border-solid border-2 p-4">
-          <h1>Daily Tasks</h1>
+      <nav className="border-r-2 border-black w-3/12 h-screen p-4">
+        <div className="flex">
           <button
             className="ml-auto text-2xl font-semibold text-sky-400"
             onClick={() => {
               const windowFeatures = "left=600,top=300,width=500,height=380";
               const handle = window.open(
-                "/tasks/new",
+                "/tasks/configure/new",
                 "newTaskWindow",
                 windowFeatures
               );
@@ -31,12 +32,28 @@ export default function MainLayout({ children }: MainLayoutProps) {
             +
           </button>
         </div>
-        <ul>
-          {/* load tasks here */}
-          <li></li>
+        <h1>Daily Tasks</h1>
+        <ul className="mt-4">
+          {tasks.map((task) => (
+            <li key={task.id}>
+              <Link
+                className="my-2 p-4 border-2 flex items-center"
+                style={{ backgroundColor: task.theme, borderColor: task.theme }}
+                href={`/tasks/${task.id}`}
+              >
+                <h2>{task.title}</h2>
+
+                <div className="flex ml-auto">
+                  <p>{task.time}</p>
+                  <ClockIcon className="h-6 w-6" />
+                  <ChevronRightIcon className="h-6 w-6 ml-4" />
+                </div>
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
-      <div className="p-4">{children}</div>
+      <section className="p-4 h-screen w-screen">{children}</section>
     </main>
   );
 }

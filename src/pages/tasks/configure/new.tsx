@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 const newTaskFormSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
-  time: z
+  minutes: z
     .number({ required_error: "Time is required" })
     .min(1, { message: "Time must be at least one minute" }),
   theme: z.string().min(1, { message: "Theme is required" }),
@@ -18,7 +18,7 @@ type NewTaskFormSchema = z.infer<typeof newTaskFormSchema>;
 
 const defaultValues: NewTaskFormSchema = {
   title: "",
-  time: 1,
+  minutes: 1,
   theme: uniqolor.random({ format: "hex", lightness: [70, 80] }).color,
 };
 
@@ -75,7 +75,7 @@ export default function NewTaskRoute() {
           <div className="flex-col">
             <div className="flex p-2 align-center border-2 border-black">
               <ClockIcon className="h-6 w-6 mr-2" />
-              <label htmlFor="time" className="w-3/4 text-slate-700 ">
+              <label htmlFor="minutes" className="w-3/4 text-slate-700 ">
                 Length
               </label>
               <input
@@ -83,14 +83,14 @@ export default function NewTaskRoute() {
                 type="number"
                 step="1"
                 min="1"
-                {...register("time", {
+                {...register("minutes", {
                   setValueAs: (v) => (v === "" ? undefined : parseInt(v, 10)),
                 })}
               />
               <span>minutes</span>
             </div>
-            {errors.time?.message && (
-              <p className="text-red-600 w-full">{errors.time?.message}</p>
+            {errors.minutes?.message && (
+              <p className="text-red-600 w-full">{errors.minutes?.message}</p>
             )}
           </div>
 
